@@ -1,0 +1,6 @@
+# Netscape HTTP Cookie File
+# https://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file! Do not edit.
+
+ytdlp.online	FALSE	/	FALSE	1788920619	_sid	a159c039-3561-454f-b324-ae6b3136dbcc
+ytdlp.online	FALSE	/	FALSE	0	session	eyJjc3JmX3Rva2VuIjoiMDlkNTEzZGIwNmEyMjk4YzExZjk2ZWJmNmJlNWVlMDAxMGY4Y2VkYiJ9.aqC8EA.Wlf_gDSAd84HNcI_190EwoyIEGU

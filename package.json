@@ -1,0 +1,107 @@
+{
+  "name": "Hikari-Free",
+  "author": "Sorano Hoshi",
+  "version": "1.0.0",
+  "description": "Hikari-Free is a minimal free WhatsApp bot demo - try it, then get the full Hikari version",
+  "main": "main.js",
+  "type": "module",
+  "private": true,
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "whatsapp-bot",
+    "baileys",
+    "hikari"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SoraNoHoshi1/Hikari.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SoraNoHoshi1/Hikari/issues"
+  },
+  "imports": {
+    "#lib/*": "./lib/*.js",
+    "#src/*": "./src/*.js",
+    "#config": "./src/config.js"
+  },
+  "scripts": {
+    "dev": "nodemon main.js",
+    "start": "node --expose-gc --import tsx main.js",
+    "start:bun": "bun main.js",
+    "pm2": "pm2 start ecosystem.config.cjs",
+    "watch": "nodemon main.js",
+    "cli": "node ./lib/bash.js",
+    "clean": "npx modclean -r",
+    "format": "prettier --write \"**/*.{js,json,md,ts}\"",
+    "lint": "prettier --check \"**/*.{js,json,md,ts}\""
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@babel/generator": "^8.0.5",
+    "@babel/parser": "^8.0.5",
+    "@babel/traverse": "^8.0.5",
+    "@babel/types": "^8.0.5",
+    "@google/generative-ai": "^0.24.1",
+    "@napi-rs/canvas": "^1.0.9",
+    "archiver": "^8.0.0",
+    "awesome-phonenumber": "^7.5.0",
+    "axios": "^1.8.4",
+    "baileys": "7.0.0-rc14",
+    "chalk": "^6.0.0",
+    "cheerio": "^1.0.0",
+    "chess.js": "^1.4.0",
+    "chokidar": "^5.0.0",
+    "dayjs": "^1.11.18",
+    "execa": "^10.0.1",
+    "express": "^5.2.1",
+    "file-type": "^22.1.0",
+    "form-data": "^4.0.2",
+    "googleapis": "^181.0.0",
+    "image-size": "^2.0.4",
+    "jimp": "^1.6.0",
+    "moment-timezone": "^0.6.0",
+    "ms": "^2.1.3",
+    "node-cron": "^4.2.1",
+    "node-webpmux": "^3.2.1",
+    "pdf-lib": "^1.17.1",
+    "pino": "^10.3.1",
+    "prettier": "^3.6.2",
+    "pretty-bytes": "^7.1.0",
+    "resend": "^6.28.0",
+    "shazamio-core": "^1.3.1",
+    "socks-proxy-agent": "^10.1.0",
+    "syntax-error": "^1.4.0",
+    "tar": "^7.4.3",
+    "tsx": "^4.21.0",
+    "undici": "^8.10.2",
+    "ws": "^8.21.3",
+    "yahoo-finance2": "^4.0.2",
+    "yargs": "^18.0.0"
+  },
+  "depcheck": {
+    "ignorePatterns": [
+      "src/bin/python/**"
+    ]
+  },
+  "prettier": {
+    "printWidth": 100,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "bracketSpacing": true,
+    "arrowParens": "always",
+    "endOfLine": "lf"
+  },
+  "engines": {
+    "node": ">=22.5.0",
+    "npm": ">=9.0.0"
+  },
+  "allowScripts": {
+    "baileys@7.0.0-rc14": true,
+    "esbuild@0.28.2": true,
+    "protobufjs@7.6.6": true
+  }
+}

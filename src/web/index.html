@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Hikari Web Games</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px; }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  p.sub { color: #94a3b8; margin-bottom: 24px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; width: 100%; max-width: 560px; }
+  a.card { background: #1e293b; border-radius: 16px; padding: 24px 12px; text-decoration: none; color: inherit; text-align: center; border: 1px solid #334155; }
+  a.card:active { transform: scale(0.97); }
+  .emoji { font-size: 2.6rem; display: block; margin-bottom: 8px; }
+  .name { font-weight: 700; }
+  .desc { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
+  footer { margin-top: auto; padding-top: 24px; color: #64748b; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+  <h1>🎮 Hikari Web Games</h1>
+  <p class="sub">Main langsung di browser — HP &amp; PC</p>
+  <div class="grid">
+    <a class="card" href="./tetris/"><span class="emoji">🧱</span><span class="name">Tetris</span><div class="desc">Susun blok, kejar skor</div></a>
+    <a class="card" href="./chess/"><span class="emoji">♟️</span><span class="name">Catur</span><div class="desc">Lawan AI, aturan penuh</div></a>
+    <a class="card" href="./snake/"><span class="emoji">🐍</span><span class="name">Snake</span><div class="desc">Makan &amp; memanjang</div></a>
+  </div>
+  <footer>Hikari Bot © 2026</footer>
+</body>
+</html>

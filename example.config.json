@@ -1,0 +1,228 @@
+{
+  "instagram": "",
+  "github": "",
+  "group": "",
+  "website": "",
+  "tenor": "",
+  "payment": {
+    "qris": "",
+    "dana": "",
+    "ovo": "",
+    "gopay": "",
+    "pulsa": "",
+    "buatQris": {
+      "url": "",
+      "accountId": "",
+      "secretToken": "",
+      "callback": true
+    }
+  },
+  "owner": [["", "", true]],
+  "bot": {
+    "name": "",
+    "number": "",
+    "id": "",
+    "usePairing": true,
+    "pairingCode": "",
+    "mode": "self",
+    "session": "",
+    "db": "",
+    "bypassDisappearing": false,
+    "stealth": false
+  },
+  "subBot": [],
+  "price": {
+    "rent": {
+      "weekly": 14000,
+      "monthly": 20000,
+      "yearly": 170000
+    },
+    "premium": {
+      "weekly": 8000,
+      "monthly": 18000,
+      "yearly": 140000,
+      "lifetime": 250000
+    },
+    "script": {
+      "price": 65000,
+      "currency": "Rp",
+      "note": ""
+    }
+  },
+  "chanell": {
+    "id": "",
+    "name": "",
+    "url": "",
+    "useWm": false
+  },
+  "watermark": "",
+  "author": "",
+  "loading": "",
+  "errorMsg": "",
+  "stickpack": "",
+  "stickauth": "",
+  "sticker": {
+    "fps": 10,
+    "quality": 40,
+    "animatedMaxSize": 500000,
+    "staticMaxSize": 300000
+  },
+  "media": {
+    "image": {
+      "tech": "https://cdn-44u.pages.dev/image/tech.jpg",
+      "thumbnail": "https://cdn-44u.pages.dev/image/thumbnail.jpg",
+      "thumbnail2": "https://cdn-44u.pages.dev/image/thumbnail2.png",
+      "denied": "https://cdn-44u.pages.dev/image/denied.jpg",
+      "store": "https://cdn-44u.pages.dev/image/store.png",
+      "bank": "https://cdn-44u.pages.dev/image/bank.jpg",
+      "deposit": "https://cdn-44u.pages.dev/image/depo.jpg",
+      "withraw": "https://cdn-44u.pages.dev/image/wd.jpg",
+      "inventory": "https://cdn-44u.pages.dev/image/inventory.jpg",
+      "avatar": "https://cdn-44u.pages.dev/image/avatar.png",
+      "akinator": "https://cdn-44u.pages.dev/image/akinator.jpg",
+      "levelup": "https://cdn-44u.pages.dev/image/levelup.jpg",
+      "nsfw": "https://cdn-44u.pages.dev/image/nsfw.png",
+      "saham": "https://cdn-44u.pages.dev/image/saham.jpg",
+      "welcome": [
+        "https://cdn-44u.pages.dev/image/thumbnail2.png",
+        "https://filebin.net/712fea4c08c926d6/073f3026b02c2bd4.jpg",
+        "https://cdn.popcat.xyz/welcome-bg.png"
+      ]
+    },
+    "video": {
+      "thumbnail": [
+        "https://cdn-44u.pages.dev/video/myWorld.mp4",
+        "https://cdn-44u.pages.dev/video/thumbnail.mp4",
+        "https://cdn-44u.pages.dev/video/thumbnail2.mp4"
+      ]
+    }
+  },
+  "domain": {
+    "domainName": "",
+    "apiToken": "",
+    "zoneID": ""
+  },
+  "EPass": "",
+  "proxy": {
+    "useTor": false,
+    "port": 4865,
+    "ignoreUrl": [""],
+    "DataDir": "",
+    "LogFile": ""
+  },
+  "binaries": {
+    "autoInstall": true,
+    "install": {
+      "python": true,
+      "tor": false,
+      "speedtest": true,
+      "mutagen": true,
+      "fonts": true,
+      "cacert": true
+    },
+    "source": {
+      "python": "auto",
+      "yt-dlp": "auto",
+      "gallery-dl": "auto",
+      "ffmpeg": "auto",
+      "ffprobe": "auto",
+      "speedtest": "auto",
+      "tor": "auto",
+      "mutagen": "auto"
+    },
+    "paths": {
+      "python": "",
+      "yt-dlp": "",
+      "gallery-dl": "",
+      "ffmpeg": "",
+      "ffprobe": "",
+      "speedtest": "",
+      "tor": "",
+      "mutagen": ""
+    }
+  },
+  "server": {
+    "useServer": true,
+    "port": 2473,
+    "publicUrl": ""
+  },
+  "minigames": {
+    "claimMinAge": 60,
+    "claimWindow": 1800,
+    "tetris": {
+      "rate": 1,
+      "maxScore": 999999,
+      "claim": 100
+    },
+    "snake": {
+      "rate": 5,
+      "maxScore": 9999,
+      "claim": 100
+    },
+    "chess": {
+      "win": 500,
+      "draw": 200,
+      "lose": 50,
+      "claim": 100
+    }
+  },
+  "logs": {
+    "enable": false,
+    "websocket": {
+      "enable": false,
+      "port": 9100,
+      "apiKey": ""
+    }
+  },
+  "backup": {
+    "gdrive": {
+      "enabled": false,
+      "clientId": "",
+      "clientSecret": "",
+      "refreshToken": "",
+      "folderId": ""
+    }
+  },
+  "optionFlags": {
+    "quality": {
+      "alias": ["q"],
+      "type": "number"
+    },
+    "document": {
+      "alias": ["doc", "d"],
+      "type": "boolean"
+    },
+    "gif": {
+      "alias": ["g"],
+      "type": "boolean"
+    },
+    "list-color": {
+      "alias": ["lc"],
+      "type": "boolean"
+    },
+    "random": {
+      "alias": ["r"],
+      "type": "boolean"
+    },
+    "help": {
+      "alias": ["h"],
+      "type": "boolean"
+    },
+    "force": {
+      "alias": ["f"],
+      "type": "boolean"
+    },
+    "genre": {
+      "alias": ["gendre"],
+      "type": "string"
+    },
+    "page": {
+      "alias": ["p"],
+      "type": "number"
+    },
+    "chapter": {
+      "alias": ["ch"],
+      "type": "number"
+    }
+  }
+}

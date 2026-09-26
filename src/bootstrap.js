@@ -1,0 +1,14 @@
+import { EventEmitter } from 'events';
+import yargs from 'yargs';
+import path from 'path';
+import { protoType, serialize } from '#lib/utils/simple';
+import { PATH } from '#lib/utils/helper';
+import { loadDatabase } from '#src/database';
+EventEmitter.defaultMaxListeners = 200;
+process.env.ROOT_DIR = path.resolve('.');
+process.env.TMPDIR = PATH.tmp;
+process.env.TZ = 'Asia/Jakarta';
+global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
+protoType();
+await loadDatabase();
+await serialize();

@@ -1,0 +1,20 @@
+# Netscape HTTP Cookie File
+# https://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file! Do not edit.
+
+www.pixiv.net	FALSE	/	TRUE	1819729353	first_visit_datetime	2026-07-28%2001%3A22%3A35
+.pixiv.net	TRUE	/	TRUE	1819729353	p_ab_id	6
+.pixiv.net	TRUE	/	TRUE	1819729353	p_ab_id_2	0
+.pixiv.net	TRUE	/	TRUE	1819729353	p_ab_d_id	389913664
+www.pixiv.net	FALSE	/	TRUE	1819729356	yuid_b	OFGJMXY
+.pixiv.net	TRUE	/	TRUE	1790323269	device_token	a333da950c9efa44402b30dec25a39a6
+.pixiv.net	TRUE	/	TRUE	1821258679	privacy_policy_agreement	7
+.pixiv.net	TRUE	/	TRUE	1823222794	c_type	29
+.pixiv.net	TRUE	/	TRUE	1823222794	privacy_policy_notification	0
+.pixiv.net	TRUE	/	TRUE	1823222794	a_type	0
+.pixiv.net	TRUE	/	TRUE	1823222794	b_type	0
+www.pixiv.net	FALSE	/	FALSE	1819729547	login_ever	yes
+www.pixiv.net	FALSE	/	TRUE	1820161874	first_visit_datetime_pc	2026-08-02%2001%3A31%3A14
+.pixiv.net	TRUE	/	TRUE	1791254794	PHPSESSID	128586446_miDndnfssDPwtPC2XhpJ3WXcD3tJxIhz
+.pixiv.net	TRUE	/	TRUE	1786785020	cc1	2026-08-14%2018%3A10%3A21
+.pixiv.net	TRUE	/	TRUE	1788664641	__cf_bm	wCKrMGNobCkVl3BWn_oghkpAQ_GVzJRiQFmLUuKDjEs-1788662842.8077805-1.0.1.1-t1ByOdvsXk5oKF6SKNbiHZAT3.4_09HK8hznAaOS.kTtS4tYejsdIbti_0IhCbfwxxq9uP8MKImFUZPqQc1ZG3euQo5JpxKy14iYgE.PyFMrG.mtl6UjRuYqKj0NQ2ti5HLysrXomwm9eJYsEPNIAQ

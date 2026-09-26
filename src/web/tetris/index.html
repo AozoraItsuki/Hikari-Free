@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Tetris — Hikari</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 8px; touch-action: manipulation; }
+  a.back { color: #94a3b8; text-decoration: none; align-self: flex-start; margin-bottom: 4px; font-size: .85rem; }
+  h1 { font-size: 1.1rem; margin-bottom: 4px; }
+  .stats { display: flex; gap: 12px; margin-bottom: 6px; font-size: 0.85rem; }
+  .stats b { color: #fbbf24; }
+  canvas { background: #020617; border: 2px solid #334155; border-radius: 8px; }
+  .pad { display: grid; grid-template-columns: repeat(3, 52px); gap: 6px; margin-top: 8px; }
+  .pad button { height: 46px; font-size: 1.2rem; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; }
+  .pad button:active { background: #334155; }
+  .wide { grid-column: span 3; font-size: .9rem !important; height: 38px !important; }
+  #msg { margin-top: 4px; min-height: 1.2em; font-weight: 700; color: #f472b6; font-size: .9rem; }
+  #reward { margin-top: 2px; min-height: 1.2em; font-weight: 700; color: #4ade80; font-size: .9rem; text-align: center; }
+</style>
+</head>
+<body>
+  <a class="back" href="../">← Semua game</a>
+  <h1>🧱 Tetris</h1>
+  <div class="stats"><span>Skor <b id="score">0</b></span><span>Level <b id="level">1</b></span><span>Baris <b id="lines">0</b></span></div>
+  <canvas id="game" width="160" height="320"></canvas>
+  <div id="msg"></div>
+  <div id="reward"></div>
+  <div class="pad">
+    <span></span><button data-k="up">⟳</button><span></span>
+    <button data-k="left">◀</button><button data-k="down">▼</button><button data-k="right">▶</button>
+    <button class="wide" data-k="start">▶ Mulai / Ulangi</button>
+  </div>
+<script>
+const COLS = 10, ROWS = 20, CELL = 16;
+const PLAY_TOKEN = '__PLAY_TOKEN__';
+const SERVER_HOST = '__SERVER_HOST__';
+let submitted = false;
+const cv = document.getElementById('game'), ctx = cv.getContext('2d');
+const SHAPES = {
+  I: { c: '#22d3ee', m: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]] },
+  J: { c: '#60a5fa', m: [[1,0,0],[1,1,1],[0,0,0]] },
+  L: { c: '#fb923c', m: [[0,0,1],[1,1,1],[0,0,0]] },
+  O: { c: '#facc15', m: [[1,1],[1,1]] },
+  S: { c: '#4ade80', m: [[0,1,1],[1,1,0],[0,0,0]] },
+  T: { c: '#c084fc', m: [[0,1,0],[1,1,1],[0,0,0]] },
+  Z: { c: '#f87171', m: [[1,1,0],[0,1,1],[0,0,0]] },
+};
+const KEYS = Object.keys(SHAPES);
+let grid, cur, score, lines, level, over, started, timer;
+function submitScore(score) {
+  const el = document.getElementById('reward');
+  const manual = () => { el.textContent = PLAY_TOKEN.includes('__') ? ('Skor: ' + score) : ('Skor: ' + score + ' • Klaim: .klaim ' + PLAY_TOKEN); };
+  if (!PLAY_TOKEN || PLAY_TOKEN.includes('__') || !SERVER_HOST || SERVER_HOST.includes('__')) return manual();
+  try {
+    const ws = new WebSocket('wss://' + SERVER_HOST + '/api/score');
+    const to = setTimeout(() => { try { ws.close(); } catch (e) {} manual(); }, 8000);
+    ws.onopen = () => ws.send(JSON.stringify({ token: PLAY_TOKEN, score }));
+    ws.onmessage = (ev) => {
+      clearTimeout(to);
+      try {
+        const r = JSON.parse(ev.data);
+        el.textContent = r.ok ? ('+Rp' + r.amount + ' masuk! 💰') : ('Gagal, klaim manual: .klaim ' + PLAY_TOKEN);
+      } catch (e) { manual(); }
+      try { ws.close(); } catch (e) {}
+    };
+    ws.onerror = () => { clearTimeout(to); manual(); };
+  } catch (e) { manual(); }
+}
+function reset() {
+  grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  score = 0; lines = 0; level = 1; over = false; started = true; submitted = false;
+  document.getElementById('msg').textContent = '';
+  document.getElementById('reward').textContent = '';
+  spawn(); update(); loop();
+}
+function spawn() {
+  const k = KEYS[(Math.random() * KEYS.length) | 0];
+  cur = { m: SHAPES[k].m.map((r) => r.slice()), c: SHAPES[k].c, x: 3, y: 0 };
+  if (collide(cur.m, cur.x, cur.y)) { over = true; started = false; document.getElementById('msg').textContent = '💀 Game Over!'; if (!submitted) { submitted = true; submitScore(score); } }
+}
+function collide(m, px, py) {
+  for (let y = 0; y < m.length; y++)
+    for (let x = 0; x < m[y].length; x++)
+      if (m[y][x]) {
+        const nx = px + x, ny = py + y;
+        if (nx < 0 || nx >= COLS || ny >= ROWS || (ny >= 0 && grid[ny][nx])) return true;
+      }
+  return false;
+}
+function rotate() {
+  const m = cur.m.map((r, i) => r.map((_, j) => cur.m[cur.m.length - 1 - j][i]));
+  for (const dx of [0, -1, 1, -2, 2]) {
+    if (!collide(m, cur.x + dx, cur.y)) { cur.m = m; cur.x += dx; return; }
+  }
+}
+function merge() {
+  cur.m.forEach((r, y) => r.forEach((v, x) => {
+    if (v && cur.y + y >= 0) grid[cur.y + y][cur.x + x] = cur.c;
+  }));
+}
+function clear() {
+  let n = 0;
+  for (let y = ROWS - 1; y >= 0; y--) {
+    if (grid[y].every(Boolean)) { grid.splice(y, 1); grid.unshift(Array(COLS).fill(null)); n++; y++; }
+  }
+  if (n) {
+    lines += n; score += [0, 40, 100, 300, 1200][n] * level;
+    level = 1 + ((lines / 10) | 0);
+  }
+}
+function step() {
+  if (!started || over) return;
+  if (!collide(cur.m, cur.x, cur.y + 1)) cur.y++;
+  else { merge(); clear(); spawn(); }
+  update();
+}
+function loop() {
+  clearTimeout(timer);
+  if (!started || over) return;
+  timer = setTimeout(() => { step(); loop(); }, Math.max(80, 800 - (level - 1) * 70));
+}
+function draw() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const cell = (x, y, c) => {
+    ctx.fillStyle = c; ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+  };
+  grid.forEach((r, y) => r.forEach((c, x) => c && cell(x, y, c)));
+  if (cur) cur.m.forEach((r, y) => r.forEach((v, x) => v && cur.y + y >= 0 && cell(cur.x + x, cur.y + y, cur.c)));
+}
+function update() {
+  document.getElementById('score').textContent = score;
+  document.getElementById('level').textContent = level;
+  document.getElementById('lines').textContent = lines;
+  draw();
+}
+function press(k) {
+  if (k === 'start') return reset();
+  if (!started || over || !cur) return;
+  if (k === 'left' && !collide(cur.m, cur.x - 1, cur.y)) cur.x--;
+  if (k === 'right' && !collide(cur.m, cur.x + 1, cur.y)) cur.x++;
+  if (k === 'down') step();
+  if (k === 'up') rotate();
+  update();
+}
+document.querySelectorAll('.pad button').forEach((b) => {
+  b.addEventListener('touchstart', (e) => { e.preventDefault(); press(b.dataset.k); }, { passive: false });
+  b.addEventListener('click', () => press(b.dataset.k));
+});
+document.addEventListener('keydown', (e) => {
+  const map = { ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'down', ArrowUp: 'up', ' ': 'start', Enter: 'start' };
+  if (map[e.key]) { e.preventDefault(); press(map[e.key]); }
+});
+grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+update();
+</script>
+</body>
+</html>

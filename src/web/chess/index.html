@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Catur — Hikari</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 8px; touch-action: manipulation; }
+  a.back { color: #94a3b8; text-decoration: none; align-self: flex-start; margin-bottom: 4px; font-size: .85rem; }
+  h1 { font-size: 1.1rem; margin-bottom: 4px; }
+  #status { margin-bottom: 6px; min-height: 1.4em; font-weight: 700; text-align: center; font-size: .9rem; }
+  #board { display: grid; grid-template-columns: repeat(8, 1fr); width: min(92vw, 330px); border: 2px solid #334155; border-radius: 8px; overflow: hidden; }
+  .sq { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: clamp(1.2rem, 7vw, 1.8rem); cursor: pointer; user-select: none; }
+  .l { background: #e2e8f0; } .d { background: #64748b; }
+  .sq.sel { outline: 3px solid #fbbf24; outline-offset: -3px; }
+  .sq.move::after { content: ''; width: 28%; height: 28%; border-radius: 50%; background: rgba(34, 197, 94, 0.7); }
+  .sq.cap::after { content: ''; position: absolute; width: 88%; height: 88%; border-radius: 50%; border: 4px solid rgba(239, 68, 68, 0.8); }
+  .sq.cap { position: relative; }
+  .sq.last { background: #fde68a !important; }
+  .row { display: flex; gap: 8px; margin-top: 8px; }
+  button { padding: 8px 16px; font-size: .9rem; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; }
+  button:active { background: #334155; }
+  .cap { font-size: 0.8rem; color: #94a3b8; margin-top: 6px; min-height: 1.2em; text-align: center; }
+  #reward { margin-top: 2px; min-height: 1.2em; font-weight: 700; color: #4ade80; font-size: .9rem; text-align: center; }
+  small { color: #64748b; margin-top: 4px; font-size: .75rem; }
+</style>
+</head>
+<body>
+  <a class="back" href="../">← Semua game</a>
+  <h1>♟️ Catur <small style="font-size:.8rem">(kamu Putih)</small></h1>
+  <div id="status">Pilih bidak</div>
+  <div id="board"></div>
+  <div class="cap" id="captured"></div>
+  <div id="reward"></div>
+  <div class="row">
+    <button id="new">🔄 Baru</button>
+    <button id="undo">↩ Undo</button>
+  </div>
+  <small>Promosi otomatis jadi Ratu • AI hitam depth-2</small>
+<script>
+const PIECES = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+const VAL = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+const PST = {
+  p: [0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  n: [-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
+  b: [-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,10,10,5,0,-10,-10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,0,-10,-10,10,10,10,10,10,10,-10,-10,5,0,0,0,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20],
+  r: [0,0,0,0,0,0,0,0,5,10,10,10,10,10,10,5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,0,0,0,5,5,0,0,0],
+  q: [-20,-10,-10,-5,-5,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
+  k: [-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20],
+};
+let B, turn, castling, ep, half, history, sel, lastMove, gameOver, seq = 0;
+const PLAY_TOKEN = '__PLAY_TOKEN__';
+const SERVER_HOST = '__SERVER_HOST__';
+let submitted = false;
+function submitScore(score, result) {
+  const el = document.getElementById('reward');
+  const manual = () => { el.textContent = PLAY_TOKEN.includes('__') ? '' : ('Klaim: .klaim ' + PLAY_TOKEN); };
+  if (!PLAY_TOKEN || PLAY_TOKEN.includes('__') || !SERVER_HOST || SERVER_HOST.includes('__')) return manual();
+  try {
+    const ws = new WebSocket('wss://' + SERVER_HOST + '/api/score');
+    const to = setTimeout(() => { try { ws.close(); } catch (e) {} manual(); }, 8000);
+    ws.onopen = () => ws.send(JSON.stringify({ token: PLAY_TOKEN, score, result }));
+    ws.onmessage = (ev) => {
+      clearTimeout(to);
+      try {
+        const r = JSON.parse(ev.data);
+        el.textContent = r.ok ? ('+Rp' + r.amount + ' masuk! 💰') : ('Gagal, klaim manual: .klaim ' + PLAY_TOKEN);
+      } catch (e) { manual(); }
+      try { ws.close(); } catch (e) {}
+    };
+    ws.onerror = () => { clearTimeout(to); manual(); };
+  } catch (e) { manual(); }
+}
+function setup() {
+  const back = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
+  B = Array.from({ length: 8 }, () => Array(8).fill(null));
+  for (let c = 0; c < 8; c++) {
+    B[0][c] = 'b' + back[c]; B[1][c] = 'bp';
+    B[6][c] = 'wp'; B[7][c] = 'w' + back[c];
+  }
+  turn = 'w'; castling = { wK: 1, wQ: 1, bK: 1, bQ: 1 }; ep = null; half = 0;
+  history = []; sel = null; lastMove = null; gameOver = false;
+}
+const inB = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
+const opp = (c) => (c === 'w' ? 'b' : 'w');
+function kingPos(bd, color) {
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (bd[r][c] === color + 'k') return [r, c];
+  return null;
+}
+function attacked(bd, r, c, by) {
+  for (let rr = 0; rr < 8; rr++)
+    for (let cc = 0; cc < 8; cc++) {
+      const p = bd[rr][cc];
+      if (!p || p[0] !== by) continue;
+      const t = p[1], dr = r - rr, dc = c - cc;
+      if (t === 'p') {
+        const d = by === 'w' ? -1 : 1;
+        if (dr === d && Math.abs(dc) === 1) return true;
+      } else if (t === 'n') {
+        if ((Math.abs(dr) === 2 && Math.abs(dc) === 1) || (Math.abs(dr) === 1 && Math.abs(dc) === 2)) return true;
+      } else if (t === 'k') {
+        if (Math.max(Math.abs(dr), Math.abs(dc)) === 1) return true;
+      } else {
+        const dirs = t === 'r' ? [[1,0],[-1,0],[0,1],[0,-1]] : t === 'b' ? [[1,1],[1,-1],[-1,1],[-1,-1]] : [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+        for (const [qr, qc] of dirs) {
+          let nr = rr + qr, nc = cc + qc;
+          while (inB(nr, nc)) {
+            if (nr === r && nc === c) return true;
+            if (bd[nr][nc]) break;
+            nr += qr; nc += qc;
+          }
+        }
+      }
+    }
+  return false;
+}
+function pseudo(bd, r, c, cast, epsq) {
+  const p = bd[r][c], color = p[0], t = p[1], moves = [];
+  const add = (nr, nc, extra) => { if (inB(nr, nc) && (!bd[nr][nc] || bd[nr][nc][0] !== color)) moves.push({ fr: r, fc: c, tr: nr, tc: nc, ...extra }); };
+  if (t === 'p') {
+    const d = color === 'w' ? -1 : 1, start = color === 'w' ? 6 : 1;
+    if (inB(r + d, c) && !bd[r + d][c]) {
+      add(r + d, c, { promo: (r + d === 0 || r + d === 7) });
+      if (r === start && !bd[r + 2 * d][c]) add(r + 2 * d, c, { dbl: true });
+    }
+    for (const dc of [-1, 1]) {
+      const nr = r + d, nc = c + dc;
+      if (!inB(nr, nc)) continue;
+      if (bd[nr][nc] && bd[nr][nc][0] !== color) add(nr, nc, { promo: (nr === 0 || nr === 7) });
+      else if (epsq && epsq[0] === nr && epsq[1] === nc) add(nr, nc, { ep: true });
+    }
+  } else if (t === 'n' || t === 'k') {
+    const steps = t === 'n' ? [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]] : [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+    for (const [dr, dc] of steps) add(r + dr, c + dc);
+    if (t === 'k') {
+      const home = color === 'w' ? 7 : 0;
+      if (r === home && c === 4 && !attacked(bd, r, c, opp(color))) {
+        const K = color === 'w' ? 'wK' : 'bK', Q = color === 'w' ? 'wQ' : 'bQ';
+        if (cast[K] && !bd[home][5] && !bd[home][6] && bd[home][7] === color + 'r' &&
+            !attacked(bd, home, 5, opp(color)) && !attacked(bd, home, 6, opp(color)))
+          moves.push({ fr: r, fc: c, tr: home, tc: 6, castle: 'K' });
+        if (cast[Q] && !bd[home][3] && !bd[home][2] && !bd[home][1] && bd[home][0] === color + 'r' &&
+            !attacked(bd, home, 3, opp(color)) && !attacked(bd, home, 2, opp(color)))
+          moves.push({ fr: r, fc: c, tr: home, tc: 2, castle: 'Q' });
+      }
+    }
+  } else {
+    const dirs = t === 'r' ? [[1,0],[-1,0],[0,1],[0,-1]] : t === 'b' ? [[1,1],[1,-1],[-1,1],[-1,-1]] : [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+    for (const [dr, dc] of dirs) {
+      let nr = r + dr, nc = c + dc;
+      while (inB(nr, nc)) {
+        if (!bd[nr][nc]) add(nr, nc);
+        else { if (bd[nr][nc][0] !== color) add(nr, nc); break; }
+        nr += dr; nc += dc;
+      }
+    }
+  }
+  return moves;
+}
+function applyMove(bd, mv) {
+  const undo = { cap: bd[mv.tr][mv.tc], cast: { ...castling }, ep, half, epcap: null };
+  const p = bd[mv.fr][mv.fc];
+  bd[mv.tr][mv.tc] = mv.promo ? p[0] + 'q' : p;
+  bd[mv.fr][mv.fc] = null;
+  if (mv.ep) { undo.epcap = bd[mv.fr][mv.tc]; bd[mv.fr][mv.tc] = null; }
+  if (mv.castle) {
+    const home = mv.tr;
+    if (mv.tc === 6) { bd[home][5] = bd[home][7]; bd[home][7] = null; }
+    else { bd[home][3] = bd[home][0]; bd[home][0] = null; }
+  }
+  if (p[1] === 'k') { castling[p[0] + 'K'] = 0; castling[p[0] + 'Q'] = 0; }
+  if (p === 'wr' && mv.fr === 7 && mv.fc === 0) castling.wQ = 0;
+  if (p === 'wr' && mv.fr === 7 && mv.fc === 7) castling.wK = 0;
+  if (p === 'br' && mv.fr === 0 && mv.fc === 0) castling.bQ = 0;
+  if (p === 'br' && mv.fr === 0 && mv.fc === 7) castling.bK = 0;
+  const capRook = undo.cap;
+  if (capRook === 'wr' && mv.tr === 7 && mv.tc === 0) castling.wQ = 0;
+  if (capRook === 'wr' && mv.tr === 7 && mv.tc === 7) castling.wK = 0;
+  if (capRook === 'br' && mv.tr === 0 && mv.tc === 0) castling.bQ = 0;
+  if (capRook === 'br' && mv.tr === 0 && mv.tc === 7) castling.bK = 0;
+  ep = mv.dbl ? [(mv.fr + mv.tr) / 2, mv.fc] : null;
+  half = p[1] === 'p' || undo.cap || undo.epcap ? 0 : half + 1;
+  return undo;
+}
+function unapply(bd, mv, undo) {
+  const p = bd[mv.tr][mv.tc];
+  bd[mv.fr][mv.fc] = mv.promo ? p[0] + 'p' : p;
+  bd[mv.tr][mv.tc] = undo.cap;
+  if (mv.ep) bd[mv.fr][mv.tc] = undo.epcap;
+  if (mv.castle) {
+    const home = mv.tr;
+    if (mv.tc === 6) { bd[home][7] = bd[home][5]; bd[home][5] = null; }
+    else { bd[home][0] = bd[home][3]; bd[home][3] = null; }
+  }
+  castling = undo.cast; ep = undo.ep; half = undo.half;
+}
+function legalMoves(color) {
+  const out = [];
+  for (let r = 0; r < 8; r++)
+    for (let c = 0; c < 8; c++) {
+      if (!B[r][c] || B[r][c][0] !== color) continue;
+      for (const mv of pseudo(B, r, c, castling, ep)) {
+        const undo = applyMove(B, mv);
+        const k = kingPos(B, color);
+        if (k && !attacked(B, k[0], k[1], opp(color))) out.push(mv);
+        unapply(B, mv, undo);
+      }
+    }
+  return out;
+}
+function inCheck(color) {
+  const k = kingPos(B, color);
+  return k ? attacked(B, k[0], k[1], opp(color)) : false;
+}
+function evaluate() {
+  let s = 0;
+  for (let r = 0; r < 8; r++)
+    for (let c = 0; c < 8; c++) {
+      const p = B[r][c];
+      if (!p) continue;
+      const idx = p[0] === 'w' ? r * 8 + c : (7 - r) * 8 + c;
+      const v = VAL[p[1]] + PST[p[1]][idx];
+      s += p[0] === 'w' ? v : -v;
+    }
+  return s;
+}
+function search(depth, alpha, beta, color) {
+  const moves = legalMoves(color);
+  if (!moves.length) {
+    if (inCheck(color)) return color === 'w' ? -100000 - depth : 100000 + depth;
+    return 0;
+  }
+  if (depth === 0) return evaluate();
+  moves.sort((a, b) => (B[b.tr][b.tc] ? 1 : 0) - (B[a.tr][a.tc] ? 1 : 0));
+  if (color === 'w') {
+    let best = -Infinity;
+    for (const mv of moves) {
+      const u = applyMove(B, mv);
+      best = Math.max(best, search(depth - 1, alpha, beta, 'b'));
+      unapply(B, mv, u);
+      alpha = Math.max(alpha, best);
+      if (beta <= alpha) break;
+    }
+    return best;
+  }
+  let best = Infinity;
+  for (const mv of moves) {
+    const u = applyMove(B, mv);
+    best = Math.min(best, search(depth - 1, alpha, beta, 'w'));
+    unapply(B, mv, u);
+    beta = Math.min(beta, best);
+    if (beta <= alpha) break;
+  }
+  return best;
+}
+function aiMove() {
+  const moves = legalMoves('b');
+  if (!moves.length) return;
+  moves.sort((a, b) => (B[b.tr][b.tc] ? 1 : 0) - (B[a.tr][a.tc] ? 1 : 0));
+  let best = Infinity, cands = [];
+  for (const mv of moves) {
+    const u = applyMove(B, mv);
+    const s = search(1, -Infinity, Infinity, 'w');
+    unapply(B, mv, u);
+    if (s < best - 1e-9) { best = s; cands = [mv]; }
+    else if (Math.abs(s - best) < 15) cands.push(mv);
+  }
+  doMove(cands[(Math.random() * cands.length) | 0]);
+}
+function material() {
+  const flat = B.flat().filter(Boolean);
+  const minor = flat.filter((p) => p[1] === 'b' || p[1] === 'n');
+  if (flat.every((p) => p[1] === 'k')) return true;
+  if (flat.length === 3 && minor.length === 1) return true;
+  return false;
+}
+function doMove(mv) {
+  history.push(JSON.stringify({ B, castling, ep, half, turn, lastMove }));
+  const piece = B[mv.fr][mv.fc];
+  applyMove(B, mv);
+  lastMove = mv;
+  turn = opp(turn);
+  sel = null;
+  const moves = legalMoves(turn);
+  if (!moves.length) {
+    gameOver = true;
+    if (inCheck(turn)) {
+      const win = turn !== 'w';
+      setStatus(win ? '🎉 Kamu menang (skakmat)!' : '🏆 AI menang (skakmat)!');
+      if (!submitted) { submitted = true; submitScore(0, win ? 'win' : 'lose'); }
+    } else {
+      setStatus('🤝 Remis (stalemate)!');
+      if (!submitted) { submitted = true; submitScore(0, 'draw'); }
+    }
+  } else if (material()) {
+    gameOver = true;
+    setStatus('🤝 Remis (materi kurang)!');
+    if (!submitted) { submitted = true; submitScore(0, 'draw'); }
+  } else if (inCheck(turn)) {
+    setStatus((turn === 'w' ? 'Giliranmu' : 'AI berpikir…') + ' — SKAK!');
+  } else {
+    setStatus(turn === 'w' ? 'Giliranmu' : 'AI berpikir…');
+  }
+  render();
+  if (!gameOver && turn === 'b') {
+    const s = seq;
+    setTimeout(() => { if (!gameOver && s === seq) aiMove(); }, 350);
+  }
+}
+function setStatus(t) { document.getElementById('status').textContent = t; }
+function render() {
+  const bd = document.getElementById('board');
+  bd.innerHTML = '';
+  const selMoves = sel ? legalMoves('w').filter((m) => m.fr === sel[0] && m.fc === sel[1]) : [];
+  for (let r = 0; r < 8; r++)
+    for (let c = 0; c < 8; c++) {
+      const d = document.createElement('div');
+      d.className = 'sq ' + ((r + c) % 2 ? 'd' : 'l');
+      const p = B[r][c];
+      if (p) { d.textContent = PIECES[p[1]]; d.style.color = p[0] === 'w' ? '#0f172a' : '#111'; d.style.textShadow = p[0] === 'w' ? '0 0 2px #fff' : '0 0 3px #94a3b8'; }
+      if (sel && sel[0] === r && sel[1] === c) d.classList.add('sel');
+      const mv = selMoves.find((m) => m.tr === r && m.tc === c);
+      if (mv) d.classList.add(B[r][c] ? 'cap' : 'move');
+      if (lastMove && ((lastMove.fr === r && lastMove.fc === c) || (lastMove.tr === r && lastMove.tc === c))) d.classList.add('last');
+      d.addEventListener('click', () => tap(r, c));
+      d.addEventListener('touchstart', (e) => { e.preventDefault(); tap(r, c); }, { passive: false });
+      bd.appendChild(d);
+    }
+  const caps = { w: [], b: [] };
+  B.flat().forEach((p) => p && caps[p[0]].push(p[1]));
+  const missing = (color, t, n) => {
+    const have = caps[color].filter((x) => x === t).length;
+    return PIECES[t].repeat(Math.max(0, n - have));
+  };
+  document.getElementById('captured').textContent =
+    'Putih makan: ' + (missing('b', 'p', 8) + missing('b', 'n', 2) + missing('b', 'b', 2) + missing('b', 'r', 2) + missing('b', 'q', 1) || '—') +
+    '  •  Hitam makan: ' + (missing('w', 'p', 8) + missing('w', 'n', 2) + missing('w', 'b', 2) + missing('w', 'r', 2) + missing('w', 'q', 1) || '—');
+}
+function tap(r, c) {
+  if (gameOver || turn !== 'w') return;
+  if (sel) {
+    const mv = legalMoves('w').find((m) => m.fr === sel[0] && m.fc === sel[1] && m.tr === r && m.tc === c);
+    if (mv) return doMove(mv);
+  }
+  sel = B[r][c] && B[r][c][0] === 'w' ? [r, c] : null;
+  render();
+}
+document.getElementById('new').addEventListener('click', () => { seq++; submitted = false; document.getElementById('reward').textContent = ''; setup(); setStatus('Giliranmu'); render(); });
+document.getElementById('undo').addEventListener('click', () => {
+  if (!history.length || gameOver) return;
+  seq++;
+  let prev = JSON.parse(history.pop());
+  if (prev.turn === 'b' && history.length) prev = JSON.parse(history.pop());
+  B = prev.B; castling = prev.castling; ep = prev.ep; half = prev.half; turn = prev.turn; lastMove = prev.lastMove;
+  gameOver = false; sel = null;
+  setStatus('Giliranmu');
+  render();
+});
+setup();
+setStatus('Giliranmu');
+render();
+</script>
+</body>
+</html>
